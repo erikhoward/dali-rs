@@ -1,0 +1,17 @@
+[package]
+name = "dali"
+version = "0.1.0"
+edition = "2021"
+authors = ["Erik Howard <erikhoward@pm.me>"]
+description = "A simple and fast client library for SurrealDB."
+license = "Apache-2.0"
+readme = "README.md"
+keywords = ["surrealdb", "database", "client"]
+categories = ["database"]
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+derive_builder = "0.11.2"
+base64 = "0.13.1"
+ureq = { version = "2.5.0", features = ["json", "gzip"] }
