@@ -4,7 +4,28 @@
 // http://apache.org/licenses/LICENSE-2.0>. This file may not be
 // copied, modified, or distributed except according to those terms.
 
+use ureq::{AgentBuilder};
+use serde::{Deserialize, Serialize};
+
 const USER_AGENT: &str = concat!("dali-rs/", env!("CARGO_PKG_VERSION"));
+
+#[derive(Debug)]
+pub enum RequestMethod {
+    GET,
+    PATCH,
+    POST,
+    PUT,
+    DELETE,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct SurrealHTTPResponse {
+    pub time: String,
+    pub status: String,
+    pub result: Vec<serde_json::Value>,
+}
+
+// TODO: Create connection options for TLS and Timeouts
 
 #[derive(Default, Builder, Debug)]
 #[builder(setter(into))]
@@ -28,19 +49,36 @@ impl Client {
         ClientBuilder::default()
     }
 
-    // return base64 encoded auth string
     fn auth(&self) -> String {
         let auth = format!("{}:{}", self.username, self.password);
         let auth = base64::encode(auth);
         format!("Basic {}", auth)
     }
+
+    pub fn execute(&self, uri: &str, data: &str) -> Result<serde_json::Value, ureq::Error> {
+        let agent = AgentBuilder::new()
+            .user_agent(USER_AGENT)
+            .build();
+
+        let response = agent.post(uri)
+            .set("Accept", "application/json")
+            .set("Authorization",&self.auth())
+            .set("DB", &self.database)
+            .set("NS", &self.namespace)
+            .send_string(data)?;
+
+        // return serde json
+        Ok(response.into_json()?)
+        
+    }
 }
 
 #[cfg(test)]
 mod tests {
+    use super::*;
 
+    #[test]
     fn can_build_client() {
-        use crate::client::ClientBuilder;
         let client = ClientBuilder::default()
             .username("test")
             .password("test")
@@ -51,7 +89,6 @@ mod tests {
 
     #[test]
     fn can_build_client_with_defaults() {
-        use crate::client::ClientBuilder;
         let client = ClientBuilder::default().build().unwrap();
         assert_eq!(client.host, "localhost");
         assert_eq!(client.port, 8000);
@@ -63,7 +100,6 @@ mod tests {
 
     #[test]
     fn can_auth() {
-        use crate::client::ClientBuilder;
         let client = ClientBuilder::default()
             .username("test")
             .password("test")
@@ -76,12 +112,29 @@ mod tests {
     // test Client new impl
     #[test]
     fn can_build_client_with_new() {
-        use crate::client::Client;
         let client = Client::new()
             .username("test")
             .password("test")
             .build()
             .unwrap();
         assert_eq!(client.username, "test");
+    }
+
+    #[test]
+    // test execute method
+    fn can_execute_query() {
+        let client = Client::new()
+            .username("root")
+            .password("root")
+            .build()
+            .unwrap();
+        match client.execute("http://20.163.28.54:8000/sql", "select * from account;") {
+            Ok(response) => {
+                assert_eq!(response[0]["status"], "OK");
+            }
+            Err(e) => {
+                panic!("Error: {}", e);
+            }
+        }
     }
 }
