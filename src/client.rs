@@ -38,7 +38,6 @@ impl Client {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
 
     fn can_build_client() {
         use crate::client::ClientBuilder;
