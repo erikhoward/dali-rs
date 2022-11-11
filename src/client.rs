@@ -128,7 +128,7 @@ mod tests {
             .password("root")
             .build()
             .unwrap();
-        match client.execute("http://20.163.28.54:8000/sql", "select * from account;") {
+        match client.execute("http://localhost:8000/sql", "select * from account;") {
             Ok(response) => {
                 assert_eq!(response[0]["status"], "OK");
             }
