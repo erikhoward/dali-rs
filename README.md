@@ -1,7 +1,7 @@
 # dali-rs
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
-A simple and fast client library for SurrealDB.
+A simple and fast Rust client library for SurrealDB.
 
 ## Quick Start
 
